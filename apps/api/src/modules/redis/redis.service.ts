@@ -22,6 +22,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       port: this.configService.get('app.redis.port'),
       password: this.configService.get('app.redis.password') || undefined,
       maxRetriesPerRequest: 3,
+      enableOfflineQueue: false, // Prevents hanging requests if Redis is offline
       retryStrategy: (times) => {
         if (times > 3) return null; // stop retrying after 3 times
         return Math.min(times * 50, 2000);
