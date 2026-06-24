@@ -46,9 +46,13 @@ async function bootstrap() {
   const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [process.env.FRONTEND_URL || 'http://localhost:3000'];
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
+      if (!origin || 
+          allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, ''))) ||
+          origin.includes('localhost') || 
+          origin.endsWith('.vercel.app')) {
+        callback(null, origin || true);
       } else {
+        console.error(`CORS blocked origin: ${origin}`);
         callback(new Error('Not allowed by CORS'));
       }
     },
