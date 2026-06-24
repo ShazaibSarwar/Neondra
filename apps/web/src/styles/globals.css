@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --primary: 160 84% 39%; /* Emerald */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 32% 91%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 214 32% 91%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 160 84% 39%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --card: 222 47% 7%;
+    --card-foreground: 213 31% 91%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 47% 11%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --ring: 160 84% 39%;
+  }
+
+  /* Theme: Ocean */
+  .theme-ocean {
+    --primary: 221 83% 53%; /* Blue */
+    --ring: 221 83% 53%;
+  }
+  .theme-ocean.dark {
+    --primary: 217 91% 60%;
+    --ring: 217 91% 60%;
+  }
+
+  /* Theme: Sunset */
+  .theme-sunset {
+    --primary: 24 98% 50%; /* Orange */
+    --ring: 24 98% 50%;
+  }
+  .theme-sunset.dark {
+    --primary: 20 100% 60%;
+    --ring: 20 100% 60%;
+  }
+
+  /* Theme: Royal */
+  .theme-royal {
+    --primary: 262 83% 58%; /* Purple */
+    --ring: 262 83% 58%;
+  }
+  .theme-royal.dark {
+    --primary: 265 89% 65%;
+    --ring: 265 89% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary;
+    background-image: radial-gradient(circle at top center, rgba(16, 185, 129, 0.05), transparent 40%);
+  }
+  .dark body {
+    background-image: radial-gradient(circle at top center, rgba(16, 185, 129, 0.1), transparent 40%);
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-background/60 backdrop-blur-xl border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)];
+  }
+  .glass-card {
+    @apply bg-card/70 backdrop-blur-md border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+  .dark .glass {
+    @apply bg-background/50 border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)];
+  }
+  .dark .glass-card {
+    @apply bg-card/50 border-white/5;
+  }
+  .pro-max-hover {
+    @apply hover:-translate-y-1 hover:scale-[1.01] transition-all duration-300 ease-out;
+  }
+}
+
+/* Mobile-first touch targets */
+@layer components {
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  nav, header, .fixed, button, [data-radix-popper-content-wrapper] {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .print\:block {
+    display: block !important;
+  }
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+}
+
+/* Fix SweetAlert2 icon alignment in Tailwind */
+.swal2-icon, .swal2-icon * {
+  box-sizing: content-box !important;
+}

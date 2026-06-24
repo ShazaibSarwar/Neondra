@@ -1,0 +1,558 @@
+SOFTWARE REQUIREMENTS SPECIFICATION
+Wedding Financial &
+Gift Tracking System
+WFGTS-SRS-v1.0
+Version | 1.0 — Initial Release
+Status | Draft
+Date | 18 May 2026
+Prepared For | Wedding Financial & Gift Tracking System
+Document Type | Software Requirements Specification
+
+CONFIDENTIAL  —  ALL RIGHTS RESERVED
+Table of Contents
+1. Document Control
+1.1 Document Information
+Field | Details
+Document Title | Wedding Financial & Gift Tracking System — Software Requirements Specification
+Document ID | WFGTS-SRS-v1.0
+Version | 1.0
+Status | Draft
+Owner | Shazaib Sarwar
+Classification | Confidential
+
+1.2 Revision History
+Version | Date | Author | Description of Changes
+1.0 | 18 May 2026 | Product Team | Initial SRS draft based on high-level requirements
+
+1.3 Document Purpose
+This Software Requirements Specification (SRS) defines the complete functional and non-functional requirements for the Wedding Financial & Gift Tracking System (WFGTS). The document serves as the authoritative reference for all design, development, testing, and acceptance activities throughout the project lifecycle.
+1.4 Scope
+This document covers the WFGTS web application — a mobile-first platform for Pakistani families to digitally record, manage, and analyze all wedding-related financial exchanges including cash gifts (Salami), gift contributions, and monetary transactions across multiple ceremonial events.
+1.5 Intended Audience
+Audience | Purpose
+Development Team | Implementation guidance, API contracts, data models
+UI/UX Designers | Interaction design, mobile-first UX constraints
+QA Engineers | Acceptance criteria, test case derivation
+Project Manager | Scope baseline, milestone planning
+Product Owner | Requirement traceability, sign-off
+Stakeholders | System capabilities, feature scope understanding
+
+2. Executive Summary
+The Wedding Financial & Gift Tracking System (WFGTS) is a mobile-first web application purpose-built for Pakistani families to digitize and manage the complex financial interactions that occur during multi-event wedding ceremonies. In traditional Pakistani weddings, monetary gifts (Salami) and contributions flow between dozens of families across four or more ceremonial events — Mehndi, Barat, Valima, and Nikah — yet all record-keeping is currently done informally or from memory.
+WFGTS solves this by providing a structured digital platform where families can create wedding events, register participants, record every transaction in real time, and instantly view net balances and summaries. The system is designed for one-handed mobile use during live events, with minimal typing, fast data entry flows, and card-based dashboards.
+2.1 Key Value Proposition
+Eliminates manual record-keeping and memory-based tracking
+Provides real-time net balance calculations per person and per event
+Supports the full Pakistani wedding event structure (Mehndi, Barat, Valima, Nikah)
+Offers role-based family management for multi-member coordination
+Generates exportable PDF and Excel reports for post-event reconciliation
+2.2 Success Criteria
+Metric | Target
+Transaction Entry Time | < 10 seconds per entry on mobile
+Balance Calculation Accuracy | 100% — zero discrepancies
+Mobile Usability Score | >= 85/100 (Lighthouse Mobile)
+User Onboarding Time | < 5 minutes from registration to first entry
+Report Generation Time | < 3 seconds for PDF/Excel export
+
+3. Product Overview
+3.1 Product Name & Identity
+Product Name | Wedding Financial & Gift Tracking System (WFGTS)
+
+Product Type | Mobile-First Progressive Web Application (PWA)
+
+Primary Platform | Web browser (Mobile Safari / Chrome on iOS & Android; Desktop browsers)
+
+3.2 Problem Statement
+Traditional Pakistani wedding ceremonies involve significant financial exchanges across multiple events. These exchanges are currently managed informally, leading to the following critical pain points:
+Pain Point | Impact | Severity
+No structured record-keeping | Money given/received is forgotten or misrecorded | High
+Memory-dependent tracking | Disputes arise over amounts and participants | High
+No visibility across family members | Duplicate or missed entries during live events | High
+Manual balance calculations | Error-prone, time-consuming reconciliation | Medium
+No exportable reports | Post-wedding audits are impossible | Medium
+Multiple events add complexity | Transactions across 4+ events become unmanageable | High
+
+3.3 System Context Diagram
+The WFGTS operates as a central digital hub between four key participant groups:
+Actor | Role | Interaction
+Admin User | Family head / wedding organizer | Full CRUD on events, persons, transactions; manage family roles
+Member User | Close family member | Add/edit transactions; view own family data
+Viewer User | Extended family or guest | Read-only access to assigned wedding events
+System (Backend) | Data processing engine | Calculates balances, generates reports, enforces business rules
+
+4. Stakeholders & Target Users
+4.1 Primary Users
+User Persona | Description | Key Needs
+Wedding Organizer | Family head managing one or more weddings; typically 35–60 years old; moderate tech literacy | Fast entry, clear totals, exportable summaries
+Family Admin | Younger family member delegated to manage digital records during events | Mobile-first, quick add, role management
+Family Member | Relative who wants to view contribution history | Read dashboards, filter by person/event
+Guest Contributor | Person giving Salami who may have a profile in the system | No login required; profile managed by family admin
+
+4.2 User Technical Profile
+Dimension | Profile
+Primary Device | Smartphone (Android 70%, iOS 30%)
+Network Conditions | 4G mobile data, occasionally poor connectivity at event venues
+Language Preference | Urdu (primary), English (secondary)
+Tech Literacy | Basic to moderate — familiar with WhatsApp, Facebook
+Input Method | Touch screen; minimal keyboard usage preferred
+Session Duration | Short bursts (30–60 seconds) during live events
+
+5. Functional Requirements
+5.1 FR-AUTH — Authentication & User Management
+This module governs all identity and access management operations for the WFGTS platform.
+FR-AUTH-001  |  User Registration  |  Priority: MUST HAVE
+Description: The system shall allow new users to register with a full name, email address, and password. Upon submission, the system validates email uniqueness, enforces password strength requirements (minimum 8 characters, at least one uppercase letter, one digit), and sends a verification email before activating the account. Acceptance Criteria: User can register with valid credentials. Duplicate email shows error. Weak password shows validation message. Unverified account cannot log in.
+
+FR-AUTH-002  |  User Login  |  Priority: MUST HAVE
+Description: The system shall authenticate registered users via email and password. On successful login, a JWT access token (expiry: 15 minutes) and refresh token (expiry: 7 days) are issued and stored securely. Failed login increments an attempt counter; after 5 consecutive failures, the account is temporarily locked for 15 minutes. Acceptance Criteria: Valid credentials return JWT tokens. Invalid credentials show error. 5th failed attempt triggers lockout message. Locked account cannot log in until timeout expires.
+
+FR-AUTH-003  |  JWT Token Refresh  |  Priority: MUST HAVE
+Description: The system shall automatically refresh the access token using the refresh token before expiry. If the refresh token is expired or invalid, the user is redirected to the login screen. Token rotation must be implemented — each refresh issues a new refresh token and invalidates the old one. Acceptance Criteria: Access token is refreshed silently. Expired refresh token redirects to login. Reused refresh tokens are rejected.
+
+FR-AUTH-004  |  Password Reset  |  Priority: MUST HAVE
+Description: The system shall provide a password reset flow initiated by email. The system sends a time-limited (60-minute) reset link. On visiting the link, the user enters and confirms a new password. Used reset links are invalidated immediately. Acceptance Criteria: Valid email triggers reset email within 30 seconds. Expired link shows expiry error. Successful reset allows login with new password. Old password no longer works.
+
+FR-AUTH-005  |  User Profile Management  |  Priority: SHOULD HAVE
+Description: The system shall allow authenticated users to update their display name, profile photo (max 2MB, JPEG/PNG), and phone number. Email address changes require re-verification. Password changes require current password confirmation. Acceptance Criteria: Profile updates persist immediately. Invalid photo format/size shows error. Email change triggers verification email. Password change without correct current password is rejected.
+
+FR-AUTH-006  |  Logout & Session Termination  |  Priority: MUST HAVE
+Description: The system shall invalidate both access and refresh tokens on logout, add them to a server-side deny list, and clear all client-side stored credentials. Acceptance Criteria: Post-logout API calls with old tokens return 401. User is redirected to login page. Browser storage is cleared.
+
+5.2 FR-FAM — Family Management
+Families are the top-level organizational unit in WFGTS. All weddings, persons, and transactions belong to a family group.
+FR-FAM-001  |  Create Family  |  Priority: MUST HAVE
+Description: An authenticated user can create a family group by providing a family name (required, 2–100 characters), optional description, and optional family photo. The creating user automatically becomes the Family Admin. Acceptance Criteria: Family is created and appears in the user's family list. Creator is assigned Admin role. Duplicate family names under the same user are allowed but warned.
+
+FR-FAM-002  |  Invite Family Members  |  Priority: MUST HAVE
+Description: A Family Admin can invite other registered users to join the family by email. The invitee receives an email with an accept/decline link. The inviting admin assigns a role (Admin, Member, or Viewer) at invitation time. Acceptance Criteria: Invitation email is sent within 60 seconds. Accepting the invitation adds the user to the family with assigned role. Declining removes the pending invitation.
+
+FR-FAM-003  |  Role-Based Access Control  |  Priority: MUST HAVE
+Description: The system shall enforce three roles within a family — Admin (full CRUD on all family data), Member (can add/edit transactions; cannot delete family or members), and Viewer (read-only access). Permission checks are enforced at the API level, not just UI level. Acceptance Criteria: Member attempting delete operation receives 403 error. Viewer attempting any write operation receives 403 error. Admin can perform all operations.
+
+FR-FAM-004  |  Manage Family Members  |  Priority: MUST HAVE
+Description: A Family Admin can view all members, change their roles, and remove them from the family. An admin cannot remove themselves if they are the sole admin — the system must enforce at least one admin per family. Acceptance Criteria: Role change takes effect immediately. Removing a member revokes their access. Removing the last admin is blocked with an explanatory error message.
+
+FR-FAM-005  |  Add Person Profile  |  Priority: MUST HAVE
+Description: Family Admins and Members can add person profiles (guests, relatives) to the family. Each person profile includes: full name (required), relation type (e.g., Uncle, Aunt, Family Friend — configurable list), optional phone number, optional notes, and optional profile photo. Acceptance Criteria: Person is saved and appears in the family's contact list. Duplicate names in the same family show a warning (not a hard block). Person profiles are searchable by name.
+
+5.3 FR-WED — Wedding Event Management
+Each family can manage multiple weddings. A wedding is a parent entity that groups one or more ceremonial sub-events.
+FR-WED-001  |  Create Wedding  |  Priority: MUST HAVE
+Description: A Family Admin or Member can create a wedding record with: wedding title (required), groom name, bride name, wedding date (required), wedding location (city/venue), linked family (required), and status (upcoming, active, completed). The system supports multiple weddings per family. Acceptance Criteria: Wedding record is saved and appears in the family dashboard. Required fields validated before save. Wedding date cannot be in the past when creating an 'upcoming' record.
+
+FR-WED-002  |  Manage Wedding Events (Ceremonies)  |  Priority: MUST HAVE
+Description: Each wedding can have multiple ceremony events. Supported types are: Mehndi, Barat, Valima, Nikah, and Other (with custom label). Each ceremony event has: event type (required), event date (required), venue, start time, and notes. Multiple events of the same type are allowed (e.g., two Mehndi events). Acceptance Criteria: Ceremony events are saved under the parent wedding. All five event types are selectable. Custom label is required when 'Other' is selected. Events are listed in chronological order.
+
+FR-WED-003  |  Edit & Archive Wedding  |  Priority: MUST HAVE
+Description: Family Admins can edit all wedding fields. Archiving a wedding moves it to a read-only archive state; no new transactions can be added to archived weddings. Archived weddings are accessible for reporting. Acceptance Criteria: Edits persist immediately. Archived weddings appear in a separate archive list. Attempting to add a transaction to an archived wedding returns an error.
+
+5.4 FR-TXN — Financial Transaction Tracking
+Transactions are the core data entity of WFGTS. Every financial exchange is recorded as a transaction linked to a person, an event, and an amount.
+FR-TXN-001  |  Record Cash Transaction (Salami)  |  Priority: MUST HAVE
+Description: A Member or Admin can record a cash transaction with: sender (required — selected from person list or typed as free text for new entries), receiver (required), amount in PKR (required, minimum 1, maximum 10,000,000), associated ceremony event (required), transaction date (required, defaults to today), transaction type (Cash Gift / Salami), and optional note (max 200 characters). The system saves the transaction and immediately updates all balance calculations. Acceptance Criteria: Transaction is saved with all required fields. Amount field accepts only numeric input. Balance calculations update instantly after save. Transaction appears in the event's transaction list.
+
+FR-TXN-002  |  Record Gift Item Transaction  |  Priority: SHOULD HAVE
+Description: A Member or Admin can record a gift item transaction with: item description (required), estimated monetary value (optional), sender, receiver, ceremony event, and date. Gift items appear in the transaction list with a distinct visual indicator and are optionally included in balance calculations based on a user preference toggle. Acceptance Criteria: Gift items are saved and displayed with a gift icon. If value is provided and the 'include gifts in balance' toggle is on, the value is added to the sender's total given. If toggle is off, gift items appear in history but do not affect numeric balances.
+
+FR-TXN-003  |  Quick Transaction Entry (Fast Mode)  |  Priority: MUST HAVE
+Description: The system shall provide a 'Quick Add' mode accessible via a floating action button on mobile. Quick Add pre-fills the current date and the most recently used event, requiring only sender, receiver, and amount to complete an entry. The form shall be completable in under 10 seconds on a mobile device. Acceptance Criteria: Quick Add form opens in a bottom sheet. Three required fields are visible without scrolling. Submit saves the transaction in under 1 second. Success confirmation is shown for 2 seconds then auto-dismisses.
+
+FR-TXN-004  |  Edit Transaction  |  Priority: MUST HAVE
+Description: Any transaction can be edited by an Admin or the Member who created it. Edits are timestamped and the last-modified user is tracked. Editing amount or sender/receiver triggers recalculation of affected balances. Acceptance Criteria: Edited fields are saved correctly. Balance recalculation completes within 1 second. Last modified timestamp and user are visible in the transaction detail view.
+
+FR-TXN-005  |  Delete Transaction  |  Priority: MUST HAVE
+Description: Admins can delete any transaction. Members can delete only their own entries within 24 hours of creation. Deletion is soft (marked deleted, not removed from DB) to enable audit trails. Deleted transactions are removed from all balance calculations immediately. Acceptance Criteria: Admin delete succeeds for any transaction. Member delete succeeds only for own transactions within 24 hours. Deleted transactions do not appear in lists or balances. Soft-deleted records are retained in the audit log.
+
+FR-TXN-006  |  Bulk Transaction Import  |  Priority: COULD HAVE
+Description: Admins can import transactions from a CSV template. The system provides a downloadable CSV template. On upload, the system validates each row, reports validation errors per row, and processes valid rows. Import is atomic per batch — if >20% of rows fail validation, the entire batch is rejected. Acceptance Criteria: Template download works correctly. Valid CSV imports all rows. Row-level errors are displayed with line numbers. Batch rejection threshold enforced. Successfully imported transactions appear in the transaction list.
+
+5.5 FR-BAL — Balance Calculation System
+FR-BAL-001  |  Per-Person Balance Calculation  |  Priority: MUST HAVE
+Description: The system shall automatically maintain a running balance for each person: Total Given (sum of all transactions where the person is the sender), Total Received (sum of all transactions where the person is the receiver), and Net Balance (Total Given minus Total Received). Balances are updated in real time upon any transaction create, update, or delete. Acceptance Criteria: All three balance figures are accurate to the rupee. Balances update within 1 second of any transaction change. Zero balance persons are displayed distinctly. Negative balances (received more than given) are highlighted in red.
+
+FR-BAL-002  |  Event-Wise Balance Breakdown  |  Priority: MUST HAVE
+Description: The system shall provide a balance breakdown per ceremony event: total collected during the event, total distributed, and net event balance. Each event's breakdown is accessible from the event detail screen. Acceptance Criteria: Event totals match the sum of all transactions for that event. Breakdown is visible within 2 taps from the main dashboard.
+
+FR-BAL-003  |  Family-Wide Summary  |  Priority: MUST HAVE
+Description: The system shall display a family-level financial summary across all weddings: grand total given by the family, grand total received, overall net balance, and a ranked list of top contributors. Acceptance Criteria: Family summary values match the sum of all individual balances. Top contributors list is sorted by total given, descending. Summary is visible on the main dashboard.
+
+FR-BAL-004  |  Cross-Wedding Balance Tracking  |  Priority: SHOULD HAVE
+Description: For persons who appear across multiple weddings (e.g., a relative who gave at both Barat and Valima across two different family weddings), the system shall provide a consolidated view showing their total contributions across all linked weddings. Acceptance Criteria: Cross-wedding totals are accurate. Person appearing in multiple weddings has a consolidated profile view. Data is de-duplicated based on person ID, not name matching.
+
+5.6 FR-DASH — Dashboard & Analytics
+FR-DASH-001  |  Family Overview Dashboard  |  Priority: MUST HAVE
+Description: The main dashboard shall display: family name and active wedding count, a list of wedding cards (title, date, total transactions, total amount), quick-access buttons for Add Transaction and View Reports, and notification badges for recent activity. The dashboard loads within 2 seconds on a 4G mobile connection. Acceptance Criteria: All dashboard elements render correctly. Wedding cards show accurate counts and amounts. Dashboard loads within 2 seconds. Quick-access buttons navigate to correct screens.
+
+FR-DASH-002  |  Wedding Summary Card  |  Priority: MUST HAVE
+Description: Each wedding has a summary card showing: wedding title, bride/groom names, date, total events, total transactions count, total amount collected, and a progress indicator for events completed vs. total events. Acceptance Criteria: All fields display correct data. Progress indicator reflects actual event status. Tapping the card navigates to the wedding detail screen.
+
+FR-DASH-003  |  Analytics Charts  |  Priority: SHOULD HAVE
+Description: The system shall provide visual analytics including: (1) Bar chart comparing total amounts per ceremony event, (2) Pie chart showing contribution distribution among top contributors, (3) Line chart showing transaction volume over time. Charts are rendered using a lightweight library and are interactive (tap to see values). Acceptance Criteria: All three chart types render without errors. Charts show correct data. Interactive tooltips display on tap. Charts are readable on a 5-inch mobile screen.
+
+FR-DASH-004  |  Individual Contribution History  |  Priority: MUST HAVE
+Description: Tapping on any person profile opens their contribution history: a chronological list of all transactions they sent or received, their total given, total received, net balance, and a per-event breakdown. The history can be filtered by event and date range. Acceptance Criteria: History list is complete and accurate. Filters work correctly. Net balance matches the sum of listed transactions.
+
+5.7 FR-SRCH — Search & Filter
+FR-SRCH-001  |  Global Person Search  |  Priority: MUST HAVE
+Description: The system shall provide a real-time search bar that filters persons by name across the current family. Search results appear as the user types (debounced at 300ms). Search is case-insensitive and supports partial matches. Acceptance Criteria: Results appear within 300ms of typing. Partial name matches are returned. No results found state is shown when no matches exist.
+
+FR-SRCH-002  |  Transaction Filter Panel  |  Priority: MUST HAVE
+Description: The transaction list shall include a filter panel with options: Filter by Event (multi-select checklist of events), Filter by Person (sender or receiver), Filter by Date Range (start date, end date), Filter by Type (Cash / Gift Item). Active filters are indicated by a badge count on the filter button. Acceptance Criteria: All filter options function correctly. Combined filters work (AND logic). Active filter count badge updates. Clearing filters restores the full list.
+
+5.8 FR-RPT — Reports & Export
+FR-RPT-001  |  PDF Export  |  Priority: MUST HAVE
+Description: The system shall generate a formatted PDF report for a selected wedding or event. The report includes: cover page with wedding details, transaction log sorted by event and date, per-person balance summary table, event-wise totals, and a grand total. The PDF is formatted for A4 paper and optimized for printing. Acceptance Criteria: PDF generates within 3 seconds. All data in the PDF matches on-screen data. PDF is downloadable on mobile and desktop. Table formatting is correct on A4 paper.
+
+FR-RPT-002  |  Excel Export  |  Priority: MUST HAVE
+Description: The system shall export transaction data to an Excel (.xlsx) file with three worksheets: (1) All Transactions, (2) Person Summary, (3) Event Summary. Each sheet includes appropriate column headers and auto-fitted column widths. Acceptance Criteria: Excel file downloads successfully. All three sheets are present with correct data. Column headers match field names. Data is accurate to the last transaction.
+
+FR-RPT-003  |  Printable Event Summary  |  Priority: SHOULD HAVE
+Description: The system shall generate a print-optimized one-page summary for a single ceremony event, showing all transactions for that event in a clean table format suitable for quick reference during or after the event. Acceptance Criteria: Print view is triggered by browser print. Layout fits on a single A4 page for up to 50 transactions. Page breaks handle overflow correctly.
+
+6. Non-Functional Requirements
+6.1 NFR-PERF — Performance
+ID | Requirement | Target | Priority
+NFR-PERF-001 | API Response Time (95th percentile) | < 300ms for read operations under normal load | MUST HAVE
+NFR-PERF-002 | Transaction Save Response Time | < 500ms including balance recalculation | MUST HAVE
+NFR-PERF-003 | Dashboard Load Time (4G mobile) | < 2 seconds Time to Interactive (TTI) | MUST HAVE
+NFR-PERF-004 | Report Generation | < 3 seconds for PDF/Excel up to 1,000 transactions | SHOULD HAVE
+NFR-PERF-005 | Concurrent Users | System handles 500 concurrent users without degradation | SHOULD HAVE
+NFR-PERF-006 | Database Query Performance | No query exceeds 100ms with proper indexing | MUST HAVE
+
+6.2 NFR-SEC — Security
+ID | Requirement | Priority
+NFR-SEC-001 | All API endpoints require authentication except registration and login | MUST HAVE
+NFR-SEC-002 | Passwords stored as bcrypt hash (cost factor >= 12) | MUST HAVE
+NFR-SEC-003 | HTTPS enforced on all communications; HTTP redirected to HTTPS | MUST HAVE
+NFR-SEC-004 | JWT tokens signed with RS256 algorithm using rotating key pairs | MUST HAVE
+NFR-SEC-005 | SQL injection prevention via parameterized queries / ORM | MUST HAVE
+NFR-SEC-006 | XSS prevention via input sanitization and Content Security Policy headers | MUST HAVE
+NFR-SEC-007 | Rate limiting: 100 requests/minute per authenticated user; 20/minute for auth endpoints | MUST HAVE
+NFR-SEC-008 | CORS configured to allow only whitelisted origins | MUST HAVE
+NFR-SEC-009 | Sensitive data (amounts, personal details) encrypted at rest using AES-256 | SHOULD HAVE
+NFR-SEC-010 | All data access is scoped to the user's family — cross-family data leakage is a P0 defect | MUST HAVE
+
+6.3 NFR-USAB — Usability
+ID | Requirement | Priority
+NFR-USAB-001 | Transaction entry flow completable in < 10 seconds on mobile device | MUST HAVE
+NFR-USAB-002 | Touch targets minimum 44x44 CSS pixels (WCAG 2.5.5) | MUST HAVE
+NFR-USAB-003 | Bottom navigation bar accessible with single thumb on 6-inch screen | MUST HAVE
+NFR-USAB-004 | All critical actions accessible within 3 taps from the home screen | SHOULD HAVE
+NFR-USAB-005 | Form validation errors are inline, specific, and shown immediately | MUST HAVE
+NFR-USAB-006 | Loading states shown for any operation > 300ms | SHOULD HAVE
+NFR-USAB-007 | Swipe-to-edit and swipe-to-delete on transaction list items | SHOULD HAVE
+
+6.4 NFR-AVAIL — Availability & Reliability
+ID | Requirement | Priority
+NFR-AVAIL-001 | System uptime >= 99.5% measured monthly | MUST HAVE
+NFR-AVAIL-002 | Scheduled maintenance windows communicated 24 hours in advance | SHOULD HAVE
+NFR-AVAIL-003 | Full database backups every 24 hours; incremental backups every 6 hours | MUST HAVE
+NFR-AVAIL-004 | Backup restoration tested monthly; RTO <= 4 hours, RPO <= 6 hours | SHOULD HAVE
+NFR-AVAIL-005 | Graceful degradation — read-only mode available when write services are down | COULD HAVE
+
+6.5 NFR-SCAL — Scalability
+ID | Requirement | Priority
+NFR-SCAL-001 | Backend services must be stateless and horizontally scalable | MUST HAVE
+NFR-SCAL-002 | Database schema supports > 1 million transactions without redesign | MUST HAVE
+NFR-SCAL-003 | API designed to support a future native mobile app without API changes | SHOULD HAVE
+NFR-SCAL-004 | Multi-tenancy architecture — each family's data is fully isolated | MUST HAVE
+
+7. Detailed Data Model
+The WFGTS uses a relational data model with PostgreSQL. The following section defines all entities, their attributes, data types, constraints, and relationships.
+7.1 Entity: User
+Column | Type | Constraints | Description
+id | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique user identifier
+name | VARCHAR(150) | NOT NULL | User's full display name
+email | VARCHAR(255) | NOT NULL, UNIQUE | Login email address
+password_hash | VARCHAR(255) | NOT NULL | bcrypt hash of the password
+phone | VARCHAR(20) | NULLABLE | Optional phone number
+avatar_url | TEXT | NULLABLE | Profile photo URL
+is_verified | BOOLEAN | NOT NULL, DEFAULT false | Email verification status
+is_active | BOOLEAN | NOT NULL, DEFAULT true | Account active/suspended flag
+failed_login_attempts | SMALLINT | NOT NULL, DEFAULT 0 | Count of consecutive failed logins
+locked_until | TIMESTAMPTZ | NULLABLE | Account lockout expiry time
+created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Record creation timestamp
+updated_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Last update timestamp
+
+7.2 Entity: Family
+Column | Type | Constraints | Description
+id | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique family identifier
+name | VARCHAR(150) | NOT NULL | Family group name
+description | TEXT | NULLABLE | Optional description
+photo_url | TEXT | NULLABLE | Family group photo
+created_by | UUID | FK -> users.id, NOT NULL | User who created the family
+created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Record creation timestamp
+updated_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Last update timestamp
+
+7.3 Entity: FamilyMember (Join Table)
+Column | Type | Constraints | Description
+id | UUID | PRIMARY KEY | Unique membership record
+family_id | UUID | FK -> families.id, NOT NULL | Associated family
+user_id | UUID | FK -> users.id, NOT NULL | Associated user
+role | ENUM | NOT NULL ('admin','member','viewer') | Access role within family
+invited_by | UUID | FK -> users.id, NULLABLE | User who sent the invitation
+joined_at | TIMESTAMPTZ | NULLABLE | Timestamp when invitation accepted
+status | ENUM | NOT NULL ('pending','active','removed') | Membership status
+created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Invitation creation timestamp
+
+7.4 Entity: Person
+Column | Type | Constraints | Description
+id | UUID | PRIMARY KEY | Unique person identifier
+family_id | UUID | FK -> families.id, NOT NULL | Owning family
+name | VARCHAR(150) | NOT NULL | Person's full name
+relation | VARCHAR(100) | NULLABLE | Relation type (Uncle, Aunt, Friend, etc.)
+phone | VARCHAR(20) | NULLABLE | Contact number
+avatar_url | TEXT | NULLABLE | Profile photo
+notes | TEXT | NULLABLE | Free-text notes
+is_active | BOOLEAN | NOT NULL, DEFAULT true | Soft-delete flag
+created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Record creation timestamp
+updated_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Last update timestamp
+
+7.5 Entity: Wedding
+Column | Type | Constraints | Description
+id | UUID | PRIMARY KEY | Unique wedding identifier
+family_id | UUID | FK -> families.id, NOT NULL | Owning family
+title | VARCHAR(200) | NOT NULL | Wedding title (e.g., 'Ali & Zara Wedding 2025')
+groom_name | VARCHAR(150) | NULLABLE | Groom's name
+bride_name | VARCHAR(150) | NULLABLE | Bride's name
+wedding_date | DATE | NOT NULL | Primary wedding date
+location | VARCHAR(255) | NULLABLE | City or venue
+status | ENUM | NOT NULL ('upcoming','active','completed','archived') | Wedding lifecycle status
+notes | TEXT | NULLABLE | Admin notes
+created_by | UUID | FK -> users.id, NOT NULL | Creating user
+created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Record creation timestamp
+updated_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Last update timestamp
+
+7.6 Entity: CeremonyEvent
+Column | Type | Constraints | Description
+id | UUID | PRIMARY KEY | Unique event identifier
+wedding_id | UUID | FK -> weddings.id, NOT NULL | Parent wedding
+event_type | ENUM | NOT NULL ('mehndi','barat','valima','nikah','other') | Ceremony type
+custom_label | VARCHAR(100) | NULLABLE — REQUIRED when event_type='other' | Label for 'Other' events
+event_date | DATE | NOT NULL | Date of this ceremony
+venue | VARCHAR(255) | NULLABLE | Ceremony venue
+start_time | TIME | NULLABLE | Start time
+notes | TEXT | NULLABLE | Notes about this event
+created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Record creation timestamp
+
+7.7 Entity: Transaction
+Column | Type | Constraints | Description
+id | UUID | PRIMARY KEY | Unique transaction identifier
+event_id | UUID | FK -> ceremony_events.id, NOT NULL | Associated ceremony event
+sender_id | UUID | FK -> persons.id, NOT NULL | Person who gave the gift/money
+receiver_id | UUID | FK -> persons.id, NOT NULL | Person who received the gift/money
+amount | NUMERIC(12,2) | NOT NULL, CHECK (amount > 0) | Transaction amount in PKR
+type | ENUM | NOT NULL ('cash','gift_item') | Transaction category
+gift_description | VARCHAR(255) | NULLABLE — used when type='gift_item' | Description of gift item
+include_in_balance | BOOLEAN | NOT NULL, DEFAULT true | Whether to count in balance calc
+note | VARCHAR(200) | NULLABLE | Free-text note (e.g., 'Salami from Bhabhi')
+transaction_date | DATE | NOT NULL, DEFAULT CURRENT_DATE | Date of exchange
+is_deleted | BOOLEAN | NOT NULL, DEFAULT false | Soft-delete flag
+created_by | UUID | FK -> users.id, NOT NULL | User who created the record
+updated_by | UUID | FK -> users.id, NULLABLE | Last user to edit
+created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Record creation timestamp
+updated_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Last update timestamp
+
+8. API Specification
+The WFGTS backend exposes a RESTful JSON API. All endpoints require Bearer token authentication unless marked Public. Base URL: /api/v1
+8.1 Authentication Endpoints
+Method | Endpoint | Auth | Description
+POST | /auth/register | Public | Register new user account
+POST | /auth/login | Public | Login and receive JWT tokens
+POST | /auth/refresh | Public (Refresh Token) | Refresh access token
+POST | /auth/logout | Required | Invalidate tokens and end session
+POST | /auth/forgot-password | Public | Request password reset email
+PUT | /auth/reset-password/:token | Public | Reset password with token
+GET | /auth/verify-email/:token | Public | Verify email address
+
+8.2 User Endpoints
+Method | Endpoint | Auth | Description
+GET | /users/me | Required | Get current user profile
+PUT | /users/me | Required | Update current user profile
+PUT | /users/me/password | Required | Change password
+POST | /users/me/avatar | Required | Upload profile photo
+
+8.3 Family Endpoints
+Method | Endpoint | Auth / Role | Description
+GET | /families | Required | List all families the user belongs to
+POST | /families | Required | Create new family
+GET | /families/:id | Member+ | Get family details
+PUT | /families/:id | Admin | Update family details
+DELETE | /families/:id | Admin | Delete family (soft delete)
+GET | /families/:id/members | Member+ | List family members
+POST | /families/:id/invite | Admin | Invite user to family
+PUT | /families/:id/members/:userId/role | Admin | Change member role
+DELETE | /families/:id/members/:userId | Admin | Remove member from family
+
+8.4 Person Endpoints
+Method | Endpoint | Auth / Role | Description
+GET | /families/:id/persons | Member+ | List all persons in family
+POST | /families/:id/persons | Member+ | Create new person profile
+GET | /families/:id/persons/:personId | Member+ | Get person details and balance
+PUT | /families/:id/persons/:personId | Member+ | Update person profile
+DELETE | /families/:id/persons/:personId | Admin | Soft-delete person
+GET | /families/:id/persons/:personId/transactions | Member+ | Get person's transaction history
+
+8.5 Wedding & Transaction Endpoints
+Method | Endpoint | Auth / Role | Description
+GET | /families/:id/weddings | Member+ | List family's weddings
+POST | /families/:id/weddings | Member+ | Create wedding
+GET | /families/:id/weddings/:wId | Member+ | Get wedding detail with events
+PUT | /families/:id/weddings/:wId | Member+ | Update wedding
+POST | /families/:id/weddings/:wId/events | Member+ | Add ceremony event
+PUT | /families/:id/weddings/:wId/events/:eId | Member+ | Update ceremony event
+GET | /families/:id/weddings/:wId/events/:eId/transactions | Member+ | List transactions for event
+POST | /families/:id/weddings/:wId/events/:eId/transactions | Member+ | Create transaction
+PUT | /transactions/:txId | Member+ (own) / Admin | Update transaction
+DELETE | /transactions/:txId | Member+ (own within 24h) / Admin | Delete transaction
+
+8.6 Reports Endpoints
+Method | Endpoint | Auth / Role | Description
+GET | /families/:id/weddings/:wId/report/pdf | Member+ | Download wedding PDF report
+GET | /families/:id/weddings/:wId/report/excel | Member+ | Download wedding Excel export
+GET | /families/:id/weddings/:wId/events/:eId/report/pdf | Member+ | Download event PDF summary
+
+9. UI/UX Requirements
+9.1 Design Principles
+Principle | Application in WFGTS
+Mobile-First | All layouts designed for 375px–428px viewport first; desktop is an enhancement
+Minimal Cognitive Load | Only essential information shown per screen; progressive disclosure for details
+Touch Efficiency | All interactive elements >= 44px touch target; critical actions within thumb reach
+Speed-Optimized Input | Smart defaults, recent-values auto-fill, and bottom-sheet forms for fast entry
+Cultural Relevance | Urdu-friendly font stack; PKR currency formatting; event names in both languages
+
+9.2 Navigation Structure
+Screen | Access Path | Primary Actions
+Home Dashboard | App launch / Bottom nav: Home | View family cards, quick add, recent activity
+Wedding List | Home > Select Family > Weddings | View weddings, create new wedding
+Wedding Detail | Wedding List > Select Wedding | View ceremony events, totals, export
+Event Detail | Wedding Detail > Select Event | View transactions, add transaction
+Add Transaction | FAB (floating) or Event Detail > + | Quick-add or full-form transaction entry
+Person Profile | Event > Tap person name | View balance, transaction history, edit profile
+Analytics | Bottom nav: Analytics | Charts and summaries
+Reports | Wedding Detail > Export | Download PDF or Excel
+Family Settings | Bottom nav: Settings | Members, roles, family profile
+
+9.3 Mobile UX Patterns
+Floating Action Button (FAB): Green circular button fixed at bottom-right, triggers Quick Add transaction bottom sheet
+Bottom Sheet Forms: All data entry forms (transaction, person, event) open as bottom sheets with drag-to-dismiss
+Swipe Actions: Transaction list items support swipe-right (edit) and swipe-left (delete with undo snackbar)
+Pull-to-Refresh: All list screens support pull-to-refresh gesture for data sync
+Bottom Navigation Bar: 4 tabs — Home, Weddings, Analytics, Settings — always visible
+Toast Notifications: Non-blocking success/error toasts appear at bottom of screen for 3 seconds
+Skeleton Loaders: Content placeholder skeletons shown during data fetch (never blank screens)
+9.4 Technical Frontend Stack
+Technology | Version | Purpose
+Next.js | 14+ | React framework with App Router; SSR for fast initial load; API routes
+React | 18+ | UI component library
+Tailwind CSS | 3+ | Utility-first CSS; mobile-first responsive design
+ShadCN UI | Latest | Accessible component primitives (dialogs, bottom sheets, toasts)
+https://21st.dev/community/components | Latest | Components can be usef
+Framer Motion | Latest | Smooth animations for sheet transitions and list item gestures
+Recharts | Latest | Bar, pie, and line chart rendering
+React Hook Form | Latest | Performant form state and validation
+Zod | Latest | Schema validation for forms and API responses
+TanStack Query | Latest | Server state management, background refresh, optimistic updates
+Axios | Latest | HTTP client with interceptors for token refresh
+
+10. System Architecture
+10.1 Architecture Overview
+WFGTS follows a three-tier architecture: (1) Presentation Tier — Next.js web application served via CDN, (2) Application Tier — Node.js/NestJS REST API running in containerized services, (3) Data Tier — PostgreSQL relational database with optional Redis cache layer.
+10.2 Backend Technical Stack
+Technology | Version | Purpose
+Node.js | 20 LTS | JavaScript runtime for backend services
+NestJS | Latest | Opinionated Node.js framework; modular, testable architecture
+TypeORM | Latest | ORM for PostgreSQL; entity definitions, migrations, query builder
+PostgreSQL | 15+ | Primary relational database
+Redis | 7+ | Session cache, rate-limiting counters, refresh token deny-list
+JWT (jsonwebtoken) | Latest | Token signing and verification
+bcrypt | Latest | Password hashing
+Puppeteer / PDFKit | Latest | Server-side PDF generation
+ExcelJS | Latest | Excel report generation
+Multer + S3 | Latest | File upload handling and cloud storage
+Jest | Latest | Unit and integration testing framework
+
+10.3 Infrastructure
+Component | Technology | Notes
+Frontend Hosting | Vercel / AWS Amplify | Global CDN, automatic SSL, preview deployments
+Backend Hosting | AWS ECS / Railway | Containerized Node.js services; auto-scaling
+Database | AWS RDS PostgreSQL | Multi-AZ for high availability; automated backups
+Cache Layer | AWS ElastiCache Redis | Session and rate-limiting cache
+File Storage | AWS S3 | Profile photos and generated reports
+Email Service | AWS SES / SendGrid | Transactional emails (verification, reset, invites)
+Monitoring | AWS CloudWatch / Datadog | Performance metrics, error tracking, alerting
+CI/CD | GitHub Actions | Automated test, build, and deploy pipeline
+
+11. Business Rules
+ID | Rule | Enforcement Level
+BR-001 | A transaction amount must be a positive number greater than zero and no more than PKR 10,000,000 | Backend API + Frontend validation
+BR-002 | A sender and receiver in the same transaction must be different persons | Backend API + Frontend validation
+BR-003 | Transactions can only be added to ceremony events belonging to the user's own family | Backend API (family scope check)
+BR-004 | A family must always have at least one Admin — the last Admin cannot be removed or demoted | Backend API
+BR-005 | Archived weddings are read-only — no transactions, events, or edits allowed | Backend API
+BR-006 | Members can only delete their own transactions within 24 hours of creation | Backend API (timestamp + ownership check)
+BR-007 | The 'Other' ceremony event type requires a custom label of at least 2 characters | Backend API + Frontend validation
+BR-008 | Gift items with no monetary value do not affect balance calculations regardless of toggle setting | Backend API
+BR-009 | A person profile cannot be deleted if they have associated transactions; they can only be archived | Backend API (FK constraint + business rule)
+BR-010 | Invitation links expire after 72 hours; expired invitations must be re-sent | Backend API (timestamp check)
+BR-011 | Balance calculations always exclude soft-deleted transactions | Backend API query filter
+BR-012 | All monetary amounts are stored and displayed in Pakistani Rupees (PKR); no currency conversion | System-wide
+
+12. Testing Requirements
+Test Type | Scope | Coverage Target | Tooling
+Unit Tests | Business logic, balance calculations, validators, utility functions | >= 80% line coverage | Jest
+Integration Tests | API endpoints end-to-end: request → DB → response | All MUST HAVE endpoints | Jest + Supertest
+UI Component Tests | Reusable React components: rendering, interactions, edge cases | >= 70% component coverage | React Testing Library
+E2E Tests | Critical user flows: registration, login, add transaction, view balance, export report | 5 core flows | Playwright
+Performance Tests | API response times under simulated load (500 concurrent users) | NFR-PERF targets met | k6 / Artillery
+Security Tests | OWASP Top 10 checks: injection, auth, CORS, rate limiting | Zero critical findings | OWASP ZAP
+Mobile Usability | Manual testing on iOS and Android devices: Samsung Galaxy, iPhone | All MUST HAVE UX rules | Manual + BrowserStack
+
+13. Future Enhancements (Post v1.0)
+Enhancement | Priority | Description
+Native Mobile App | High | Flutter or React Native app for iOS and Android with offline-first capability and push notifications
+Multi-Language Support | High | Full Urdu language UI with RTL layout support; switchable from Settings
+WhatsApp Integration | Medium | Log a transaction by sending a formatted WhatsApp message to a dedicated number
+AI Spending Insights | Medium | Machine learning module that identifies patterns, suggests balance settlements, and forecasts future contributions
+QR Code Guest Check-In | Medium | Print QR codes for invited guests; scan on arrival auto-populates sender field during transaction entry
+Offline Mode (PWA) | High | Service worker caching for offline transaction entry; sync when connection restored
+Automatic Reminders | Low | Configurable WhatsApp/SMS reminders for pending balances
+Cloud Sync (Multi-Device) | Medium | Real-time sync via WebSockets so multiple family members see updates instantly
+Event Vendor Tracking | Low | Track payments to caterers, decorators, and other vendors alongside guest gifts
+Custom Relation Types | Low | Admin-configurable relation type list per family (beyond the default preset list)
+
+14. Glossary
+Term | Definition
+Salami | Urdu/Punjabi term for cash gifts traditionally given during Pakistani wedding ceremonies
+Barat | The wedding procession ceremony — the primary wedding event in Pakistani culture
+Mehndi | Pre-wedding ceremony involving henna application and celebrations, typically 1–2 days before Barat
+Valima | Post-wedding reception hosted by the groom's family, typically the day after Barat
+Nikah | The Islamic marriage contract ceremony; may be held separately from Barat festivities
+Net Balance | Total amount given by a person minus total amount received; positive = net giver, negative = net receiver
+Ceremony Event | A single ceremonial occasion within a wedding (e.g., one Mehndi event on a specific date)
+Family | A top-level organizational group in WFGTS representing one nuclear or extended family unit
+Person Profile | A registered contact record representing a guest, relative, or participant tracked in the system
+Soft Delete | A deletion approach where records are marked as deleted (is_deleted = true) but retained in the database for audit purposes
+JWT | JSON Web Token — a compact, URL-safe means of representing authentication claims between parties
+SRS | Software Requirements Specification — this document
+WFGTS | Wedding Financial & Gift Tracking System — the product described in this document
+FAB | Floating Action Button — a circular button that hovers above screen content, triggering the primary screen action
+RBAC | Role-Based Access Control — the permission model where access rights are assigned to roles (Admin, Member, Viewer)
+PKR | Pakistani Rupee — the currency unit used throughout the system
+
+Appendix A — Requirement Priority Summary
+All functional requirements classified by MoSCoW priority:
+Priority | Requirements | Count
+MUST HAVE | FR-AUTH-001 through 006, FR-FAM-001 through 005, FR-WED-001 through 003, FR-TXN-001, FR-TXN-003 through 005, FR-BAL-001 through 003, FR-DASH-001, FR-DASH-002, FR-DASH-004, FR-SRCH-001, FR-SRCH-002, FR-RPT-001 through 002 | 26
+SHOULD HAVE | FR-TXN-002, FR-BAL-004, FR-DASH-003, FR-RPT-003 | 4
+COULD HAVE | FR-TXN-006 | 1
+WON'T HAVE (v1.0) | All items listed in Section 13 Future Enhancements | 10+
+
+Document Sign-Off
+Role | Name | Signature | Date
+Product Owner |  | ___________________ | 
+Lead Developer |  | ___________________ | 
+QA Lead |  | ___________________ | 
+Project Manager |  | ___________________ | 
+
+This document is the authoritative requirements baseline for the Wedding Financial & Gift Tracking System. Any changes after sign-off must go through the formal change request process.

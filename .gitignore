@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Docker
+.docker-data/
+
+# Misc
+*.tsbuildinfo
+/CLAUDE.md
+/.claude/
+graphify-out/
+/graphify-out
