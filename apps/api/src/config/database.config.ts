@@ -6,7 +6,7 @@ export default registerAs('database', () => ({
   username: process.env.DB_USERNAME || 'wfgts',
   password: process.env.DB_PASSWORD || 'wfgts_dev',
   name: process.env.DB_NAME || 'wfgts',
-  synchronize: process.env.NODE_ENV !== 'production',
+  synchronize: process.env.DB_SYNC === 'true' || process.env.NODE_ENV !== 'production',
   logging: process.env.DB_LOGGING === 'true',
   ssl: process.env.DB_SSL === 'true',
 }));
