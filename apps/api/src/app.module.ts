@@ -38,6 +38,14 @@ import appConfig from './config/app.config';
         autoLoadModels: true,
         synchronize: configService.get('database.synchronize'),
         logging: configService.get('database.logging'),
+        dialectOptions: configService.get('database.ssl') 
+          ? {
+              ssl: {
+                require: true,
+                rejectUnauthorized: false, // For Neon db
+              },
+            }
+          : undefined,
       }),
     }),
     ThrottlerModule.forRoot([

@@ -8,4 +8,5 @@ export default registerAs('database', () => ({
   name: process.env.DB_NAME || 'wfgts',
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.DB_LOGGING === 'true',
+  ssl: process.env.DB_SSL === 'true',
 }));
